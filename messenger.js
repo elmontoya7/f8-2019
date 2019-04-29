@@ -90,6 +90,7 @@ function handleMessage(sender_psid, received_message) {
         message: message.text
       }
     }, (err, res, body) => {
+      console.log(body);
       if (!err) {
         if (body.success) {
           callSendAPI(sender_psid, body.resource.sentiment);
