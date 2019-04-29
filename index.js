@@ -48,21 +48,21 @@ app.post("/new-message", async (req, res) => {
     })*/
 });
 
-app.post("/positive-messages", async (req, res) => {
+app.post("/sentiment-messages", async (req, res) => {
 
   var user_id = (req.body.queries != null && req.body.queries[0] != null) ? req.body.queries[0].value : null; // the first query if for the user_id
-  console.log("here: ", req.body.queries[0].value)
+  console.log("here: ", req.body.queries[1].value)
   if (user_id != null) {
-     console.log("getting existing user (", user_id + ")'s positive messages from db")
-     let response = await getPositiveMessagesForOneUser(req.body);
+     console.log("getting existing user (", user_id + ")'s positive or negative messages from db")
+     let response = await getSentimentSpecificMessagesForOneUser(req.body);
      if (response.success)
       res.json({ success: true, resource: response.resource });
      else
       res.json({ success: false })
   }
   else {
-    console.log("getting all users positive messages from db")
-    let response = await getPositiveMessagesForAllUsers(req.body);
+    console.log("getting all users positive or negative messages from db")
+    let response = await getSentimentSpecificMessagesForAllUsers(req.body);
     if (response.success)
       res.json({ success: true, resource: response.resource });
     else
@@ -136,11 +136,10 @@ var analyzeSentiment = function(message, messagesRef) {
       .then(data => {
         console.log("update db object");
 
-        let query = db.collection("messages")
-        for (let q of body.queries) {
-           query.where(q.field, q.operation, q.value)
-        }
-        query.get()
+        db.collection("messages")
+        .where("user_id", "==", message.user_id)
+        .where("timestamp", "==", message.timestamp)
+        .get()
         .then(function(querySnapshot) {
             querySnapshot.forEach(function(doc) {
               console.log(doc.id, " => ", doc.data());
@@ -155,7 +154,9 @@ var analyzeSentiment = function(message, messagesRef) {
                 })
                 .then(() => {
                   // update complete, let's return the data
-                  query
+                  messagesRef
+                  .where("user_id", "==", message.user_id)
+                  .where("timestamp", "==", message.timestamp)
                   .get()
                   .then(function(querySnapshot) {
                     querySnapshot.forEach(function(theDoc) {
@@ -176,30 +177,32 @@ var analyzeSentiment = function(message, messagesRef) {
   });
 };
 
-var getPositiveMessagesForOneUser = async function(body) {
+var getSentimentSpecificMessagesForOneUser = async function(body) {
   return new Promise((res, rej) => {
-      var positiveSentiments = []
-      let query = db.collection("messages")
-      for (let q of body.queries) {
-         query.where(q.field, q.operator, q.value)
-      }
-      query.get()
+      var messages = []
+      let q = body.queries
+
+      db.collection("messages")
+      .where(q[0].field, q[0].operator, q[0].value)
+      .get()
       .then(function(querySnapshot) {
           querySnapshot.forEach(function(doc) {
+            if(doc.data().sentiment == q[1].value) {
               console.log(doc.id, " => ", doc.data());
-              positiveSentiments.push(doc.data())
+              messages.push(doc.data())
+            }
           });
-          res({ success: true, resource: positiveSentiments });
-     })
-     .catch(err => {
-        res({ success: false })
-     });
+          res({ success: true, resource: messages });
+       })
+       .catch(err => {
+          res({ success: false })
+       });
   })
 }
 
-var getPositiveMessagesForAllUsers = async function(body) {
+var getSentimentSpecificMessagesForAllUsers = async function(body) {
   return new Promise((res, rej) => {
-      var positiveSentiments = []
+      var messages = []
       let query = db.collection("messages")
       for (let q of body.queries) {
          if(q.field === "sentiment") {
@@ -211,9 +214,9 @@ var getPositiveMessagesForAllUsers = async function(body) {
       .then(function(querySnapshot) {
           querySnapshot.forEach(function(doc) {
               console.log(doc.id, " => ", doc.data());
-              positiveSentiments.push(doc.data())
+              messages.push(doc.data())
           });
-          res({ success: true, resource: positiveSentiments });
+          res({ success: true, resource: messages });
      })
      .catch(err => {
         res({ success: false })
