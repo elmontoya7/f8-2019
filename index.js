@@ -62,8 +62,12 @@ app.post("/positive-messages", async (req, res) => {
       res.json({ success: false })
   }
   else {
-    // todo
     console.log("getting all users positive messages from db")
+    let response = await getPositiveMessagesForAllUsers(req.body);
+    if (response.success)
+      res.json({ success: true, resource: response.resource });
+    else
+      res.json({ success: false })
   }
 
 });
@@ -178,11 +182,34 @@ var analyzeSentiment = function(message, messagesRef) {
 var getPositiveMessagesForOneUser = async function(body) {
   return new Promise((res, rej) => {
       var positiveSentiments = []
-
       let query = db.collection("messages")
       for (let q of body.queries) {
          query.where(q.field, q.operator, q.value)
       }
+      query.get()
+      .then(function(querySnapshot) {
+          querySnapshot.forEach(function(doc) {
+              console.log(doc.id, " => ", doc.data());
+              positiveSentiments.push(doc.data())
+          });
+          res({ success: true, resource: positiveSentiments });
+     })
+     .catch(err => {
+        res({ success: false })
+     });
+  })
+}
+
+var getPositiveMessagesForAllUsers = async function(body) {
+  return new Promise((res, rej) => {
+      var positiveSentiments = []
+      let query = db.collection("messages")
+      for (let q of body.queries) {
+         if(q.field === "sentiment") {
+          query.where(q.field, q.operator, q.value)
+         }
+      }
+      
       query.get()
       .then(function(querySnapshot) {
           querySnapshot.forEach(function(doc) {
