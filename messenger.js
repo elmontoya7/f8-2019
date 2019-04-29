@@ -49,6 +49,30 @@ router.post('/webhook', (req, res) => {
   }
 });
 
+router.get('/getUserProfile', (req, res) => {
+  if (req.query.user_id) {
+    let fields = 'first_name,last_name,profile_pic,name,locale,timezone,gender';
+    request({
+      method: 'get',
+      url: 'https://graph.facebook.com/' + req.query.user_id,
+      qs: {
+        fields: fields,
+        access_token: PAGE_ACCESS_TOKEN
+      },
+      json: true
+    }, (err, http, body) => {
+      if (!err) {
+        res.json({success: true, resource: body})
+      } else {
+        console.log(err);
+        res.json({success: false})
+      }
+    })
+  } else {
+    res.json({success: false, message: 'No user id found.'})
+  }
+})
+
 // Handles messages events
 function handleMessage(sender_psid, received_message) {
   let response;
