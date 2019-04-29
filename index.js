@@ -35,12 +35,11 @@ app.post("/new-message", async (req, res) => {
         console.log("response sent!");
         if (response.success)
           res.json({ success: true, resource: response.resource });
-        else
-          res.json({ success: false })
+        else res.json({ success: false });
       })
       .catch(err => {
         console.log("Error getting document", err);
-        res.json({ success: false })
+        res.json({ success: false });
       });
   }
   // if new - GET/getUserProfile?user_id=<PSID>
@@ -69,7 +68,7 @@ app.post("/positive-messages", async (req, res) => {
 });
 
 var saveUserInfo = async function(req, doc, userRef) {
-  let user = null
+  let user = null;
   if (!doc.exists) {
     // new user, ask for more user profile info
     request.get(
@@ -79,16 +78,16 @@ var saveUserInfo = async function(req, doc, userRef) {
         json: true
       },
       function(error, http, answer) {
-        console.log("new user info: " + JSON.stringify(answer))
-        if(answer.success) {
-          user = answer.resource
+        console.log("new user info: " + JSON.stringify(answer));
+        if (answer.success) {
+          user = answer.resource;
           userRef.set(user);
         }
       }
     );
   } else {
     // existing user
-    user = doc.data()
+    user = doc.data();
   }
 
   // save message
@@ -131,7 +130,6 @@ var analyzeSentiment = function(message, messagesRef) {
     client
       .message(message.content)
       .then(data => {
-        //console.log("Yay, got Wit.ai response: " + JSON.stringify(data));
         console.log("update db object");
 
         let query = db.collection("messages")
@@ -141,9 +139,9 @@ var analyzeSentiment = function(message, messagesRef) {
         query.get()
         .then(function(querySnapshot) {
             querySnapshot.forEach(function(doc) {
-                console.log(doc.id, " => ", doc.data());
-                // Build doc ref from doc.id
-                messagesRef
+              console.log(doc.id, " => ", doc.data());
+              // Build doc ref from doc.id
+              messagesRef
                 .doc(doc.id)
                 .update({
                   sentiment: data.entities.sentiment ? data.entities.sentiment[0].value : null,
@@ -168,10 +166,9 @@ var analyzeSentiment = function(message, messagesRef) {
           res({ success: false })
       });
 
-      // res.json({ success: true, resource: data });
-  })
-  .catch(function () {
-     console.log("analyzeSentiment: Promise Rejected");
+    // res.json({ success: true, resource: data });
+  }).catch(function() {
+    console.log("analyzeSentiment: Promise Rejected");
   });
 };
 
