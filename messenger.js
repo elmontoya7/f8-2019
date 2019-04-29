@@ -82,7 +82,7 @@ function handleMessage(sender_psid, received_message) {
     }
 
     request({
-      "uri": "/new-message",
+      "uri": "http://localhost:3000/new-message",
       "method": "POST",
       "json": {
         user_id: received_message.sender.id,
