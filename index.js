@@ -163,10 +163,10 @@ var analyzeSentiment = function(message, messagesRef) {
                 messagesRef
                 .doc(doc.id)
                 .update({
-                  sentiment: data.entities.sentiment[0].value,
-                  sentiment_confidence: data.entities.sentiment[0].confidence,
-                  action: data.entities.action[0].value,
-                  action_confidence: data.entities.action[0].confidence
+                  sentiment: data.entities.sentiment ? data.entities.sentiment[0].value : null,
+                  sentiment_confidence: data.entities.sentiment ? data.entities.sentiment[0].confidence : null,
+                  action: data.entities.action ? data.entities.action[0].value : null,
+                  action_confidence: data.entities.action ? data.entities.action[0].confidence : null
                 })
                 .then(() => {
                   // update complete, let's return the data
