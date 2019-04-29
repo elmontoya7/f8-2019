@@ -25,7 +25,7 @@ app.post("/new-message", async (req, res) => {
   // if user is new, get basic profile info first
   var user_id = req.body.user_id;
   if (user_id) {
-    var userRef = db.collection("users").doc(user_id);
+    var userRef = await db.collection("users").doc(user_id);
     var getDoc = userRef
       .get()
       .then(async function(doc) {
@@ -71,28 +71,21 @@ var saveUserInfo = async function(req, doc, userRef) {
     // new user, ask for more user profile info
     request.get(
       {
-        url: ".../getUserProfile",
+        url: "https://dda49c3f.ngrok.io/api/getUserProfile",
         qs: { user_id: req.body.user_id },
         json: true
       },
-      function(error, http, user) {
-        //user = user.resource
-        user = 
-        {
-          "user_id":"934865",
-          "first_name": "Ellen",
-          "last_name": "L.",
-          "profile_pic": "https://fbcdn-profile-a.akamaihd.net/hprofile-ak-xpf1/v/t1.0-1/p200x200/13055603_10105219398495383_8237637584159975445_n.jpg?oh=1d241d4b6d4dac50eaf9bb73288ea192&oe=57AF5C03&__gda__=1470213755_ab17c8c8e3a0a447fed3f272fa2179ce",
-          "locale": "en_US",
-          "timezone": -7,
-          "gender": "female"
+      function(error, http, answer) {
+        console.log("new user info: " + JSON.stringify(answer))
+        if(answer.success) {
+          user = answer.resource
+          userRef.set(user);
         }
-        userRef.set(user);
       }
     );
   } else {
     // existing user
-    user = doc.data();
+    user = doc.data()
   }
 
   // save message
@@ -111,18 +104,18 @@ var saveUserInfo = async function(req, doc, userRef) {
   }, { merge: true })*/
 
   return new Promise(async (res, rej) => {
-    let response = await analyzeSentiment(message.content);
-    console.log("update db object");
-    res({ success: true, message: response.text });
+    let response = await analyzeSentiment(message, messagesRef);
+    //console.log("update db object: " + response.entities.sentiment[0].value);
+    res({ success: true, message: response });
   })
   .catch(function () {
      console.log("saveUserInfo: Promise Rejected");
   });
 };
 
-var analyzeSentiment = function(messageContent) {
+var analyzeSentiment = function(message, messagesRef) {
   return new Promise((res, rej) => {
-    console.log("analyzing data... " + messageContent);
+    console.log("analyzing data... " + message.content);
 
     const client = new Wit({
       accessToken: "I2IJR67UXBGRFWCN5A72OTKMMRYNMWUM",
@@ -130,13 +123,27 @@ var analyzeSentiment = function(messageContent) {
     });
 
     client
-      .message(messageContent)
+      .message(message.content)
       .then(data => {
-        console.log("Yay, got Wit.ai response: " + JSON.stringify(data));
-      })
-      .catch(console.error);
+        //console.log("Yay, got Wit.ai response: " + JSON.stringify(data));
+        console.log("update db object: " + data.entities.sentiment[0].value);
+        db.collection("messages")
+        .where("user_id", "==", message.user_id)
+        .where("timestamp", "==", message.timestamp)
+        .get()
+        .then(function(querySnapshot) {
+            querySnapshot.forEach(function(doc) {
+                console.log(doc.id, " => ", doc.data());
+                // Build doc ref from doc.id
+                db.collection("messages")
+                .doc(doc.id).update({sentiment: data.entities.sentiment[0].value})
+            });
+       });
+        }).catch(function(error) {
+            toast(error.message);
+        });
 
-      res.json({ success: true, resource: response });
+      // res.json({ success: true, resource: data });
   })
   .catch(function () {
      console.log("analyzeSentiment: Promise Rejected");
