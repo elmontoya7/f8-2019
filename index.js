@@ -111,18 +111,35 @@ var saveUserInfo = async function(req, doc, userRef) {
   }, { merge: true })*/
 
   return new Promise(async (res, rej) => {
-    let response = await analyzeSentiment();
+    let response = await analyzeSentiment(message.content);
     console.log("update db object");
     res({ success: true, message: response.text });
+  })
+  .catch(function () {
+     console.log("saveUserInfo: Promise Rejected");
   });
 };
 
-var analyzeSentiment = function() {
+var analyzeSentiment = function(messageContent) {
   return new Promise((res, rej) => {
-    setTimeout(function() {
-      console.log("analyzing data...");
-      res({ text: "Are you ok?" });
-    }, 2000);
+    console.log("analyzing data... " + messageContent);
+
+    const client = new Wit({
+      accessToken: "I2IJR67UXBGRFWCN5A72OTKMMRYNMWUM",
+      logger: new log.Logger(log.DEBUG) // optional
+    });
+
+    client
+      .message(messageContent)
+      .then(data => {
+        console.log("Yay, got Wit.ai response: " + JSON.stringify(data));
+      })
+      .catch(console.error);
+
+      res.json({ success: true, resource: response });
+  })
+  .catch(function () {
+     console.log("analyzeSentiment: Promise Rejected");
   });
 };
 
