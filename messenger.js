@@ -90,9 +90,9 @@ function handleMessage(sender_psid, received_message) {
         message: message.text
       }
     }, (err, res, body) => {
-      console.log(body);
+      console.log('new-message response:', body);
       if (!err) {
-        console.log('message sent!')
+        console.log('new message sent!')
       } else {
         console.error("Unable to send message:" + err);
       }
@@ -124,7 +124,7 @@ function callSendAPI(sender_psid, response) {
     "json": request_body
   }, (err, res, body) => {
     if (!err) {
-      console.log('message sent!')
+      console.log('message sent to fb!')
     } else {
       console.error("Unable to send message:" + err);
     }
