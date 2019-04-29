@@ -90,10 +90,12 @@ function handleMessage(sender_psid, received_message) {
         message: message.text
       }
     }, (err, res, body) => {
-      console.log('new-message response:', body);
       if (!err) {
-        console.log('new message sent!')
-        callSendAPI(sender_psid, response);
+        if (body.success) {
+          callSendAPI(sender_psid, body.resource.sentiment);
+        } else {
+          callSendAPI(sender_psid, 'Ups, something went wrong!')
+        }
       } else {
         console.error("Unable to send message:" + err);
       }

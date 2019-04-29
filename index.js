@@ -34,7 +34,7 @@ app.post("/new-message", async (req, res) => {
         let response = await saveUserInfo(req, doc, userRef);
 
         console.log("response sent!");
-        res.json({ success: true, resource: response });
+        res.json({ success: true, resource: response.resource });
       })
       .catch(err => {
         console.log("Error getting document", err);
@@ -106,7 +106,7 @@ var saveUserInfo = async function(req, doc, userRef) {
   return new Promise(async (res, rej) => {
     let response = await analyzeSentiment(message, messagesRef);
     //console.log("update db object: " + response.entities.sentiment[0].value);
-    res({ success: true, message: response });
+    res({ success: true, message: response.resource });
   })
   .catch(function () {
      console.log("saveUserInfo: Promise Rejected");
