@@ -93,12 +93,11 @@ function handleMessage(sender_psid, received_message) {
       console.log('new-message response:', body);
       if (!err) {
         console.log('new message sent!')
+        callSendAPI(sender_psid, response);
       } else {
         console.error("Unable to send message:" + err);
       }
     });
-
-    callSendAPI(sender_psid, response);
   }
 }
 
