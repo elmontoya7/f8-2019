@@ -32,7 +32,6 @@ app.post("/new-message", async (req, res) => {
         // save user info
         console.log("saving on db!");
         let response = await saveUserInfo(req, doc, userRef);
-        console.log('heree:', response);
         console.log("response sent!");
         res.json({ success: true, resource: response.resource });
       })
@@ -105,7 +104,6 @@ var saveUserInfo = async function(req, doc, userRef) {
 
   return new Promise(async (res, rej) => {
     let response = await analyzeSentiment(message, messagesRef);
-    console.log('here:', response);
     //console.log("update db object: " + response.entities.sentiment[0].value);
     res({ success: true, resource: response.resource });
   })
