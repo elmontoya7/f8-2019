@@ -49,7 +49,6 @@ app.post("/new-message", async (req, res) => {
 });
 
 app.post("/positive-messages", async (req, res) => {
-
   var user_id = (req.body.queries != null && req.body.queries[0] != null) ? req.body.queries[0].value : null; // the first query if for the user_id
   console.log("here: ", req.body.queries[0].value)
   if (user_id != null) {
@@ -68,7 +67,6 @@ app.post("/positive-messages", async (req, res) => {
     else
       res.json({ success: false })
   }
-
 });
 
 var saveUserInfo = async function(req, doc, userRef) {
@@ -148,10 +146,24 @@ var analyzeSentiment = function(message, messagesRef) {
               messagesRef
                 .doc(doc.id)
                 .update({
-                  sentiment: data.entities.sentiment ? data.entities.sentiment[0].value : null,
-                  sentiment_confidence: data.entities.sentiment ? data.entities.sentiment[0].confidence : null,
-                  action: data.entities.action ? data.entities.action[0].value : null,
-                  action_confidence: data.entities.action ? data.entities.action[0].confidence : null
+                  sentiment: data.entities.sentiment
+                    ? data.entities.sentiment[0].value
+                    : null,
+                  sentiment_confidence: data.entities.sentiment
+                    ? data.entities.sentiment[0].confidence
+                    : null,
+                  feeling: data.entities.feeling
+                    ? data.entities.feeling[0].value
+                    : null,
+                  feeling_confidence: data.entities.feeling
+                    ? data.entities.feeling[0].confidence
+                    : null,
+                  action: data.entities.action
+                    ? data.entities.action[0].value
+                    : null,
+                  action_confidence: data.entities.action
+                    ? data.entities.action[0].confidence
+                    : null
                 })
                 .then(() => {
                   // update complete, let's return the data
@@ -185,17 +197,17 @@ var getPositiveMessagesForOneUser = async function(body) {
       }
       query.get()
       .then(function(querySnapshot) {
-          querySnapshot.forEach(function(doc) {
-              console.log(doc.id, " => ", doc.data());
-              positiveSentiments.push(doc.data())
-          });
-          res({ success: true, resource: positiveSentiments });
-     })
-     .catch(err => {
-        res({ success: false })
-     });
-  })
-}
+        querySnapshot.forEach(function(doc) {
+          console.log(doc.id, " => ", doc.data());
+          positiveSentiments.push(doc.data());
+        });
+        res({ success: true, resource: positiveSentiments });
+      })
+      .catch(err => {
+        res({ success: false });
+      });
+  });
+};
 
 var getPositiveMessagesForAllUsers = async function(body) {
   return new Promise((res, rej) => {
