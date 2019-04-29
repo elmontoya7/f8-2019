@@ -107,7 +107,7 @@ var saveUserInfo = async function(req, doc, userRef) {
     let response = await analyzeSentiment(message, messagesRef);
     console.log('here:', response);
     //console.log("update db object: " + response.entities.sentiment[0].value);
-    res({ success: true, message: response.resource });
+    res({ success: true, resource: response.resource });
   })
   .catch(function () {
      console.log("saveUserInfo: Promise Rejected");
