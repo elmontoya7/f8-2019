@@ -58,7 +58,8 @@ router.get('/getUserProfile', (req, res) => {
       qs: {
         fields: fields,
         access_token: PAGE_ACCESS_TOKEN
-      }
+      },
+      json: true
     }, (err, http, body) => {
       if (!err) {
         res.json({success: true, resource: body})
