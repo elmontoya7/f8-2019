@@ -28,7 +28,6 @@ router.get('/webhook', (req, res) => {
 
 router.post('/webhook', (req, res) => {
   let body = req.body;
-  console.log(body);
   if (body.object === 'page') {
     body.entry.forEach(function(entry) {
       let webhook_event = entry.messaging[0];
@@ -55,7 +54,7 @@ function handleMessage(sender_psid, received_message) {
   let response;
     if (received_message.text) {
       response = {
-        "text": `You sent the message: "${received_message.text}". Now send me an image!`
+        "text": received_message.text
       }
     }
 
