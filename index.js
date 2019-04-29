@@ -25,39 +25,22 @@ app.post("/new-message", async (req, res) => {
   // if user is new, get basic profile info first
   var user_id = req.body.user_id;
   if (user_id) {
-    var userRef = db.collection("users").doc(user_id);
+    var userRef = await db.collection("users").doc(user_id);
     var getDoc = userRef
       .get()
-      .then(doc => {
-        if (!doc.exists) {
-          // new user
-          request.get(
-            {
-              url: ".../getUserProfile",
-              qs: { user_id: req.body.user_id },
-              json: true
-            },
-            function(error, http, user) {
-              user = {
-                user_id: "ada",
-                message: "hello",
-                timestamp: 3287428734
-              };
-              let response = /*await*/ saveOrUpdateUserInfo(user);
-              console.log("response sent!");
-              res.json({ success: true, resource: response });
-            }
-          );
-        } else {
-          // existing user
-          var user = doc.data();
-          let response = /*await*/ saveOrUpdateUserInfo(user);
-          console.log("response sent!");
-          res.json({ success: true, resource: response });
-        }
+      .then(async function(doc) {
+        // save user info
+        console.log("saving on db!");
+        let response = await saveUserInfo(req, doc, userRef);
+        console.log("response sent!");
+        if (response.success)
+          res.json({ success: true, resource: response.resource });
+        else
+          res.json({ success: false })
       })
       .catch(err => {
         console.log("Error getting document", err);
+        res.json({ success: false })
       });
   }
   // if new - GET/getUserProfile?user_id=<PSID>
@@ -75,7 +58,7 @@ app.post("/sentiment", (req, res) => {
     accessToken: process.env.WIT_TOKEN,
     logger: new log.Logger(log.DEBUG) // optional
   });
-
+  
   client
     .message(phrase)
     .then(data => {
@@ -85,15 +68,34 @@ app.post("/sentiment", (req, res) => {
   // res.json({ success: true, resource: response });
 });
 
-var saveOrUpdateUserInfo = async function(user) {
-  console.log("saving on db!");
-  var userRef = db.collection("users").doc(user.user_id);
-  userRef.set(user);
+var saveUserInfo = async function(req, doc, userRef) {
+  let user = null
+  if (!doc.exists) {
+    // new user, ask for more user profile info
+    request.get(
+      {
+        url: "https://dda49c3f.ngrok.io/api/getUserProfile",
+        qs: { user_id: req.body.user_id },
+        json: true
+      },
+      function(error, http, answer) {
+        console.log("new user info: " + JSON.stringify(answer))
+        if(answer.success) {
+          user = answer.resource
+          userRef.set(user);
+        }
+      }
+    );
+  } else {
+    // existing user
+    user = doc.data()
+  }
 
+  // save message
   var message = {
-    user_id: user.user_id,
-    content: user.message,
-    timestamp: user.timestamp
+    user_id: req.body.user_id,
+    content: req.body.message,
+    timestamp: req.body.timestamp
   };
   var messagesRef = db.collection("messages");
   messagesRef.add(message);
@@ -105,18 +107,67 @@ var saveOrUpdateUserInfo = async function(user) {
   }, { merge: true })*/
 
   return new Promise(async (res, rej) => {
-    let response = await analyzeSentiment();
-    console.log("update db object");
-    res({ success: true, message: response.text });
+    let response = await analyzeSentiment(message, messagesRef);
+    //console.log("update db object: " + response.entities.sentiment[0].value);
+    if (response.success)
+      res({ success: true, resource: response.resource });
+    else
+      res({ success: false })
+  })
+  .catch(function () {
+     console.log("saveUserInfo: Promise Rejected");
+     res({ success: false })
   });
 };
 
-var analyzeSentiment = function() {
+var analyzeSentiment = function(message, messagesRef) {
   return new Promise((res, rej) => {
-    setTimeout(function() {
-      console.log("analyzing data...");
-      res({ text: "Are you ok?" });
-    }, 2000);
+    console.log("analyzing data... " + message.content);
+
+    const client = new Wit({
+      accessToken: "I2IJR67UXBGRFWCN5A72OTKMMRYNMWUM",
+      logger: new log.Logger(log.DEBUG) // optional
+    });
+
+    client
+      .message(message.content)
+      .then(data => {
+        //console.log("Yay, got Wit.ai response: " + JSON.stringify(data));
+        console.log("update db object: " + data.entities.sentiment[0].value);
+        db.collection("messages")
+        .where("user_id", "==", message.user_id)
+        .where("timestamp", "==", message.timestamp)
+        .get()
+        .then(function(querySnapshot) {
+            querySnapshot.forEach(function(doc) {
+                console.log(doc.id, " => ", doc.data());
+                // Build doc ref from doc.id
+                messagesRef
+                .doc(doc.id)
+                .update({sentiment: data.entities.sentiment[0].value})
+                .then(() => {
+                  // update complete, let's return the data
+                  messagesRef
+                  .where("user_id", "==", message.user_id)
+                  .where("timestamp", "==", message.timestamp)
+                  .get()
+                  .then(function(querySnapshot) {
+                    querySnapshot.forEach(function(theDoc) {
+                      console.log("++++", theDoc.data())
+                      res({ success: true, resource: theDoc.data() });
+                    })
+                  });
+                })
+            });
+       });
+        }).catch(function(error) {
+            res({ success: false })
+        });
+
+      // res.json({ success: true, resource: data });
+  })
+  .catch(function () {
+     console.log("analyzeSentiment: Promise Rejected");
   });
 };
 
