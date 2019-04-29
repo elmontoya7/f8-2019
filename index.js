@@ -48,6 +48,43 @@ app.post("/new-message", async (req, res) => {
     })*/
 });
 
+app.post("/positive-messages", async (req, res) => {
+
+  var user_id = req.body.user_id;
+  if (user_id) {
+     console.log("getting existing user (", user_id + ")'s positive messages from db")
+     let response = await getPositiveMessagesForOneUser(user_id);
+     if (response.success)
+      res.json({ success: true, resource: response.resource });
+     else
+      res.json({ success: false })
+  }
+  else {
+    // todo
+    console.log("getting all users positive messages from db")
+  }
+
+});
+
+app.post("/sentiment", (req, res) => {
+  // console.log("req:", req.param);
+  console.log("req query:", req.query);
+  var phrase = req.query.phrase;
+  console.log("phrase:", phrase);
+  const client = new Wit({
+    accessToken: process.env.WIT_TOKEN,
+    logger: new log.Logger(log.DEBUG) // optional
+  });
+  
+  client
+    .message(phrase)
+    .then(data => {
+      console.log("Yay, got Wit.ai response: " + JSON.stringify(data));
+    })
+    .catch(console.error);
+  // res.json({ success: true, resource: response });
+});
+
 var saveUserInfo = async function(req, doc, userRef) {
   let user = null;
   if (!doc.exists) {
@@ -146,5 +183,23 @@ var analyzeSentiment = function(message, messagesRef) {
     console.log("analyzeSentiment: Promise Rejected");
   });
 };
+
+var getPositiveMessagesForOneUser = async function(user_id) {
+  return new Promise((res, rej) => {
+      db.collection("messages")
+      .where("user_id", "==", user_id)
+      .where("sentiment", "==", "positive")
+      .get()
+      .then(function(querySnapshot) {
+          querySnapshot.forEach(function(doc) {
+              console.log(doc.id, " => ", doc.data());
+              res({ success: true, resource: doc.data() });
+          });
+     })
+     .catch(err => {
+        res({ success: false })
+     });
+  })
+}
 
 app.listen(port, () => console.log(`Example app listening on port ${port}!`));
