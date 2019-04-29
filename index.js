@@ -35,12 +35,11 @@ app.post("/new-message", async (req, res) => {
         console.log("response sent!");
         if (response.success)
           res.json({ success: true, resource: response.resource });
-        else
-          res.json({ success: false })
+        else res.json({ success: false });
       })
       .catch(err => {
         console.log("Error getting document", err);
-        res.json({ success: false })
+        res.json({ success: false });
       });
   }
   // if new - GET/getUserProfile?user_id=<PSID>
@@ -49,27 +48,8 @@ app.post("/new-message", async (req, res) => {
     })*/
 });
 
-app.post("/sentiment", (req, res) => {
-  // console.log("req:", req.param);
-  console.log("req query:", req.query);
-  var phrase = req.query.phrase;
-  console.log("phrase:", phrase);
-  const client = new Wit({
-    accessToken: process.env.WIT_TOKEN,
-    logger: new log.Logger(log.DEBUG) // optional
-  });
-  
-  client
-    .message(phrase)
-    .then(data => {
-      console.log("Yay, got Wit.ai response: " + JSON.stringify(data));
-    })
-    .catch(console.error);
-  // res.json({ success: true, resource: response });
-});
-
 var saveUserInfo = async function(req, doc, userRef) {
-  let user = null
+  let user = null;
   if (!doc.exists) {
     // new user, ask for more user profile info
     request.get(
@@ -79,16 +59,16 @@ var saveUserInfo = async function(req, doc, userRef) {
         json: true
       },
       function(error, http, answer) {
-        console.log("new user info: " + JSON.stringify(answer))
-        if(answer.success) {
-          user = answer.resource
+        console.log("new user info: " + JSON.stringify(answer));
+        if (answer.success) {
+          user = answer.resource;
           userRef.set(user);
         }
       }
     );
   } else {
     // existing user
-    user = doc.data()
+    user = doc.data();
   }
 
   // save message
@@ -109,14 +89,11 @@ var saveUserInfo = async function(req, doc, userRef) {
   return new Promise(async (res, rej) => {
     let response = await analyzeSentiment(message, messagesRef);
     //console.log("update db object: " + response.entities.sentiment[0].value);
-    if (response.success)
-      res({ success: true, resource: response.resource });
-    else
-      res({ success: false })
-  })
-  .catch(function () {
-     console.log("saveUserInfo: Promise Rejected");
-     res({ success: false })
+    if (response.success) res({ success: true, resource: response.resource });
+    else res({ success: false });
+  }).catch(function() {
+    console.log("saveUserInfo: Promise Rejected");
+    res({ success: false });
   });
 };
 
@@ -132,42 +109,41 @@ var analyzeSentiment = function(message, messagesRef) {
     client
       .message(message.content)
       .then(data => {
-        //console.log("Yay, got Wit.ai response: " + JSON.stringify(data));
         console.log("update db object: " + data.entities.sentiment[0].value);
         db.collection("messages")
-        .where("user_id", "==", message.user_id)
-        .where("timestamp", "==", message.timestamp)
-        .get()
-        .then(function(querySnapshot) {
+          .where("user_id", "==", message.user_id)
+          .where("timestamp", "==", message.timestamp)
+          .get()
+          .then(function(querySnapshot) {
             querySnapshot.forEach(function(doc) {
-                console.log(doc.id, " => ", doc.data());
-                // Build doc ref from doc.id
-                messagesRef
+              console.log(doc.id, " => ", doc.data());
+              // Build doc ref from doc.id
+              messagesRef
                 .doc(doc.id)
-                .update({sentiment: data.entities.sentiment[0].value})
+                .update({ sentiment: data.entities.sentiment[0].value })
                 .then(() => {
                   // update complete, let's return the data
                   messagesRef
-                  .where("user_id", "==", message.user_id)
-                  .where("timestamp", "==", message.timestamp)
-                  .get()
-                  .then(function(querySnapshot) {
-                    querySnapshot.forEach(function(theDoc) {
-                      console.log("++++", theDoc.data())
-                      res({ success: true, resource: theDoc.data() });
-                    })
-                  });
-                })
+                    .where("user_id", "==", message.user_id)
+                    .where("timestamp", "==", message.timestamp)
+                    .get()
+                    .then(function(querySnapshot) {
+                      querySnapshot.forEach(function(theDoc) {
+                        console.log("++++", theDoc.data());
+                        res({ success: true, resource: theDoc.data() });
+                      });
+                    });
+                });
             });
-       });
-        }).catch(function(error) {
-            res({ success: false })
-        });
+          });
+      })
+      .catch(function(error) {
+        res({ success: false });
+      });
 
-      // res.json({ success: true, resource: data });
-  })
-  .catch(function () {
-     console.log("analyzeSentiment: Promise Rejected");
+    // res.json({ success: true, resource: data });
+  }).catch(function() {
+    console.log("analyzeSentiment: Promise Rejected");
   });
 };
 
