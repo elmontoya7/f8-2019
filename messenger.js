@@ -85,8 +85,8 @@ function handleMessage(sender_psid, received_message) {
       "uri": "/new-message",
       "method": "POST",
       "json": {
-        user_id: message.sender.id,
-        timestamp: message.timestamp,
+        user_id: received_message.sender.id,
+        timestamp: received_message.timestamp,
         text: message.text
       }
     }, (err, res, body) => {
