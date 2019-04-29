@@ -4,7 +4,13 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "fix:other": "npm run prettier --write",
+    "fix:js": "npm run test:js --fix",
+    "fix": "npm run fix:js && npm run fix:other",
+    "prettier": "prettier \"**/*.{json,md,scss,yaml,yml}\"",
+    "test:other": "npm run prettier --list-different",
+    "test:js": "eslint --ignore-path .gitignore --ignore-path .prettierignore \"**/*.{js,jsx}\"",
+    "test": "npm run test:other && npm run test:js"
   },
   "author": "",
   "license": "ISC",
@@ -15,5 +21,11 @@
     "firebase-admin": "^7.3.0",
     "node-wit": "^5.0.0",
     "request": "^2.88.0"
+  },
+  "devDependencies": {
+    "eslint": "5.16.0",
+    "eslint-config-prettier": "4.2.0",
+    "eslint-plugin-prettier": "3.0.1",
+    "prettier": "1.17.0"
   }
 }
