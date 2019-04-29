@@ -191,6 +191,7 @@ var analyzeSentiment = function(message, messagesRef) {
 
 var getPositiveMessagesForOneUser = async function(user_id) {
   return new Promise((res, rej) => {
+      var positiveSentiments = []
       db.collection("messages")
       .where("user_id", "==", user_id)
       .where("sentiment", "==", "positive")
@@ -198,8 +199,9 @@ var getPositiveMessagesForOneUser = async function(user_id) {
       .then(function(querySnapshot) {
           querySnapshot.forEach(function(doc) {
               console.log(doc.id, " => ", doc.data());
-              res({ success: true, resource: doc.data() });
+              positiveSentiments.push(doc.data())
           });
+          res({ success: true, resource: positiveSentiments });
      })
      .catch(err => {
         res({ success: false })
