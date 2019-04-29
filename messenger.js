@@ -5,7 +5,7 @@ const PAGE_ACCESS_TOKEN = 'EAAWDmNTGYFcBAFL2HwbZAfVtTYwYBOkHgvcRN9avXXGLX9m6sOlo
 
 router.get('/hello', (req, res) => res.send('Hello'))
 
-app.get('/webhook', (req, res) => {
+router.get('/webhook', (req, res) => {
   let VERIFY_TOKEN = "f82019"
 
   let mode = req.query['hub.mode'];
@@ -22,7 +22,7 @@ app.get('/webhook', (req, res) => {
   }
 });
 
-app.post('/webhook', (req, res) => {
+router.post('/webhook', (req, res) => {
   let body = req.body;
   console.log(body);
   if (body.object === 'page') {
