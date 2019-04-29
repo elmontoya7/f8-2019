@@ -87,7 +87,7 @@ function handleMessage(sender_psid, received_message) {
       "json": {
         user_id: received_message.sender.id,
         timestamp: received_message.timestamp,
-        text: message.text
+        message: message.text
       }
     }, (err, res, body) => {
       console.log(body);
