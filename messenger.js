@@ -1,22 +1,19 @@
 var express = require("express");
 var router = express.Router();
 var request = require("request");
+const fs = require("fs");
 const PAGE_ACCESS_TOKEN =
   "EAAWDmNTGYFcBAFL2HwbZAfVtTYwYBOkHgvcRN9avXXGLX9m6sOloZBFIfufZAZBlZA1KZAREIubbQtRVcn7DkkNT2K0veF1M6zAHAZBJL9hS7EtGmsIKD9ggQe1RrewoW0CzdMFIQpMMRJDYjdgN4Js3jZA4GMP9ZBcgPnvoaZA3vHcZAVb52fakpsyW1ZBNgfyNg0wZD";
 
-const fs = require("fs");
 let bot_responses = null;
 fs.readFile("chatbot_intervention_responses.json", (err, data) => {
   if (err) throw err;
   bot_responses = JSON.parse(data);
-  // console.log(student);
 });
 
 function getRandomInt(max) {
   return Math.floor(Math.random() * Math.floor(max));
 }
-
-// console.log("This is after the read call");
 
 router.get("/hello", (req, res) => res.send("Hello"));
 
@@ -114,9 +111,6 @@ function handleMessage(sender_psid, received_message) {
         console.log(body.resource);
         if (!err) {
           if (body.success) {
-            console.log("body sentiment:", body.resource.sentiment);
-            console.log("all body data:", body.resource);
-            console.log("bot_responses:", bot_responses);
             let user_activity = null;
             if (body.resource.feeling) {
               user_activity = "action";
@@ -125,16 +119,13 @@ function handleMessage(sender_psid, received_message) {
             } else {
               user_activity = "action";
             }
-            console.log("user_activity:", user_activity);
             num_of_responses =
               bot_responses["sentiment"][body.resource.sentiment][user_activity]
                 .length;
-            console.log("num_of_responses:", num_of_responses);
             let messenger_response =
               bot_responses["sentiment"][body.resource.sentiment][
                 user_activity
               ][getRandomInt(num_of_responses)];
-            console.log("messenger_response:", messenger_response);
             callSendAPI(sender_psid, messenger_response);
           } else {
             callSendAPI(sender_psid, "Ups, something went wrong!");
