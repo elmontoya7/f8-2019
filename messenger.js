@@ -37,9 +37,9 @@ router.post('/webhook', (req, res) => {
       console.log('Sender PSID: ' + sender_psid);
 
       if (webhook_event.message) {
-        handleMessage(sender_psid, webhook_event.message);
+        handleMessage(sender_psid, webhook_event);
       } else if (webhook_event.postback) {
-        handlePostback(sender_psid, webhook_event.postback);
+        handlePostback(sender_psid, webhook_event);
       }
     });
 
@@ -75,14 +75,31 @@ router.get('/getUserProfile', (req, res) => {
 
 // Handles messages events
 function handleMessage(sender_psid, received_message) {
-  let response;
-    if (received_message.text) {
-      response = {
-        "text": received_message.text
-      }
+  let message = received_message.message
+  if (message.text) {
+    response = {
+      "text": message.text
     }
 
+    request({
+      "uri": "http://localhost:3000/new-message",
+      "method": "POST",
+      "json": {
+        user_id: received_message.sender.id,
+        timestamp: received_message.timestamp,
+        message: message.text
+      }
+    }, (err, res, body) => {
+      console.log('new-message response:', body);
+      if (!err) {
+        console.log('new message sent!')
+      } else {
+        console.error("Unable to send message:" + err);
+      }
+    });
+
     callSendAPI(sender_psid, response);
+  }
 }
 
 // Handles messaging_postbacks events
@@ -107,7 +124,7 @@ function callSendAPI(sender_psid, response) {
     "json": request_body
   }, (err, res, body) => {
     if (!err) {
-      console.log('message sent!')
+      console.log('message sent to fb!')
     } else {
       console.error("Unable to send message:" + err);
     }
