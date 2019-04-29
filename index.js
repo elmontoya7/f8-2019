@@ -42,14 +42,9 @@ app.post("/new-message", async (req, res) => {
         res.json({ success: false });
       });
   }
-  // if new - GET/getUserProfile?user_id=<PSID>
-  /*request.get({url:'.../getUserProfile', qs: {user_id: req.body.user_id}, json:true}, function (error, http, body) {
-      console.log(body)
-    })*/
 });
 
 app.post("/sentiment-messages", async (req, res) => {
-
   var user_id = (req.body.queries != null && req.body.queries[0] != null) ? req.body.queries[0].value : null; // the first query if for the user_id
   console.log("here: ", req.body.queries[1].value)
   if (user_id != null) {
@@ -68,7 +63,6 @@ app.post("/sentiment-messages", async (req, res) => {
     else
       res.json({ success: false })
   }
-
 });
 
 var saveUserInfo = async function(req, doc, userRef) {
@@ -147,10 +141,24 @@ var analyzeSentiment = function(message, messagesRef) {
               messagesRef
                 .doc(doc.id)
                 .update({
-                  sentiment: data.entities.sentiment ? data.entities.sentiment[0].value : null,
-                  sentiment_confidence: data.entities.sentiment ? data.entities.sentiment[0].confidence : null,
-                  action: data.entities.action ? data.entities.action[0].value : null,
-                  action_confidence: data.entities.action ? data.entities.action[0].confidence : null
+                  sentiment: data.entities.sentiment
+                    ? data.entities.sentiment[0].value
+                    : null,
+                  sentiment_confidence: data.entities.sentiment
+                    ? data.entities.sentiment[0].confidence
+                    : null,
+                  feeling: data.entities.feeling
+                    ? data.entities.feeling[0].value
+                    : null,
+                  feeling_confidence: data.entities.feeling
+                    ? data.entities.feeling[0].confidence
+                    : null,
+                  action: data.entities.action
+                    ? data.entities.action[0].value
+                    : null,
+                  action_confidence: data.entities.action
+                    ? data.entities.action[0].confidence
+                    : null
                 })
                 .then(() => {
                   // update complete, let's return the data
