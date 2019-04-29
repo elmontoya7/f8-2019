@@ -135,8 +135,22 @@ var analyzeSentiment = function(message, messagesRef) {
             querySnapshot.forEach(function(doc) {
                 console.log(doc.id, " => ", doc.data());
                 // Build doc ref from doc.id
-                db.collection("messages")
-                .doc(doc.id).update({sentiment: data.entities.sentiment[0].value})
+                messagesRef
+                .doc(doc.id)
+                .update({sentiment: data.entities.sentiment[0].value})
+                .then(() => {
+                  // update complete, let's return the data
+                  messagesRef
+                  .where("user_id", "==", message.user_id)
+                  .where("timestamp", "==", message.timestamp)
+                  .get()
+                  .then(function(querySnapshot) {
+                    querySnapshot.forEach(function(theDoc) {
+                      console.log("++++", theDoc.data())
+                      res({ success: true, resource: JSON.stringify(theDoc.data()) });
+                    })
+                  });
+                })
             });
        });
         }).catch(function(error) {
