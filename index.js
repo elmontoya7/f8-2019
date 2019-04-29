@@ -162,7 +162,12 @@ var analyzeSentiment = function(message, messagesRef) {
                 // Build doc ref from doc.id
                 messagesRef
                 .doc(doc.id)
-                .update({sentiment: data.entities.sentiment[0].value})
+                .update({
+                  sentiment: data.entities.sentiment[0].value,
+                  sentiment_confidence: data.entities.sentiment[0].confidence,
+                  action: data.entities.action[0].value,
+                  action_confidence: data.entities.action[0].confidence
+                })
                 .then(() => {
                   // update complete, let's return the data
                   messagesRef
