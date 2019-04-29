@@ -1,0 +1,12 @@
+{
+  "sentiment": {
+    "positive": ["How are you?", "You deserve to be happy."],
+    "negative": [
+      "Tell me what I can do now to help you.",
+      "You are not alone in this. I’m here for you."
+    ],
+    "neutral": [
+      "I'm not sure what you mean. But is there anything I can do to help?"
+    ]
+  }
+}

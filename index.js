@@ -58,7 +58,7 @@ app.post("/sentiment", (req, res) => {
     accessToken: process.env.WIT_TOKEN,
     logger: new log.Logger(log.DEBUG) // optional
   });
-
+  
   client
     .message(phrase)
     .then(data => {
