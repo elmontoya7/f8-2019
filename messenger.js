@@ -91,7 +91,6 @@ function handleMessage(sender_psid, received_message) {
       }
     }, (err, res, body) => {
       console.log(body.resource);
-      console.log('sentiment:', body.resource.sentiment);
       if (!err) {
         if (body.success) {
           callSendAPI(sender_psid, body.resource.sentiment);
@@ -111,7 +110,6 @@ function handlePostback(sender_psid, received_postback) {
 }
 
 function callSendAPI(sender_psid, response) {
-  console.log(response);
   // Construct the message body
   let request_body = {
     "recipient": {
