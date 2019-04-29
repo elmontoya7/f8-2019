@@ -50,10 +50,11 @@ app.post("/new-message", async (req, res) => {
 
 app.post("/positive-messages", async (req, res) => {
 
-  var user_id = req.body.user_id;
-  if (user_id) {
+  var user_id = (req.body.queries != null && req.body.queries[0] != null) ? req.body.queries[0].value : null; // the first query if for the user_id
+  console.log("here: ", req.body.queries[0].value)
+  if (user_id != null) {
      console.log("getting existing user (", user_id + ")'s positive messages from db")
-     let response = await getPositiveMessagesForOneUser(user_id);
+     let response = await getPositiveMessagesForOneUser(req.body);
      if (response.success)
       res.json({ success: true, resource: response.resource });
      else
@@ -64,25 +65,6 @@ app.post("/positive-messages", async (req, res) => {
     console.log("getting all users positive messages from db")
   }
 
-});
-
-app.post("/sentiment", (req, res) => {
-  // console.log("req:", req.param);
-  console.log("req query:", req.query);
-  var phrase = req.query.phrase;
-  console.log("phrase:", phrase);
-  const client = new Wit({
-    accessToken: process.env.WIT_TOKEN,
-    logger: new log.Logger(log.DEBUG) // optional
-  });
-  
-  client
-    .message(phrase)
-    .then(data => {
-      console.log("Yay, got Wit.ai response: " + JSON.stringify(data));
-    })
-    .catch(console.error);
-  // res.json({ success: true, resource: response });
 });
 
 var saveUserInfo = async function(req, doc, userRef) {
@@ -125,12 +107,14 @@ var saveUserInfo = async function(req, doc, userRef) {
 
   return new Promise(async (res, rej) => {
     let response = await analyzeSentiment(message, messagesRef);
-    //console.log("update db object: " + response.entities.sentiment[0].value);
-    if (response.success) res({ success: true, resource: response.resource });
-    else res({ success: false });
-  }).catch(function() {
-    console.log("saveUserInfo: Promise Rejected");
-    res({ success: false });
+    if (response.success)
+      res({ success: true, resource: response.resource });
+    else
+      res({ success: false })
+  })
+  .catch(function () {
+     console.log("saveUserInfo: Promise Rejected");
+     res({ success: false })
   });
 };
 
@@ -146,36 +130,40 @@ var analyzeSentiment = function(message, messagesRef) {
     client
       .message(message.content)
       .then(data => {
-        console.log("update db object: " + data.entities.sentiment[0].value);
-        db.collection("messages")
-          .where("user_id", "==", message.user_id)
-          .where("timestamp", "==", message.timestamp)
-          .get()
-          .then(function(querySnapshot) {
+        console.log("update db object");
+
+        let query = db.collection("messages")
+        for (let q of body.queries) {
+           query.where(q.field, q.operation, q.value)
+        }
+        query.get()
+        .then(function(querySnapshot) {
             querySnapshot.forEach(function(doc) {
               console.log(doc.id, " => ", doc.data());
               // Build doc ref from doc.id
               messagesRef
                 .doc(doc.id)
-                .update({ sentiment: data.entities.sentiment[0].value })
+                .update({
+                  sentiment: data.entities.sentiment ? data.entities.sentiment[0].value : null,
+                  sentiment_confidence: data.entities.sentiment ? data.entities.sentiment[0].confidence : null,
+                  action: data.entities.action ? data.entities.action[0].value : null,
+                  action_confidence: data.entities.action ? data.entities.action[0].confidence : null
+                })
                 .then(() => {
                   // update complete, let's return the data
-                  messagesRef
-                    .where("user_id", "==", message.user_id)
-                    .where("timestamp", "==", message.timestamp)
-                    .get()
-                    .then(function(querySnapshot) {
-                      querySnapshot.forEach(function(theDoc) {
-                        console.log("++++", theDoc.data());
-                        res({ success: true, resource: theDoc.data() });
-                      });
-                    });
-                });
+                  query
+                  .get()
+                  .then(function(querySnapshot) {
+                    querySnapshot.forEach(function(theDoc) {
+                      console.log("++++", theDoc.data())
+                      res({ success: true, resource: theDoc.data() });
+                    })
+                  });
+                })
             });
-          });
-      })
-      .catch(function(error) {
-        res({ success: false });
+        });
+      }).catch(function(error) {
+          res({ success: false })
       });
 
     // res.json({ success: true, resource: data });
@@ -184,17 +172,21 @@ var analyzeSentiment = function(message, messagesRef) {
   });
 };
 
-var getPositiveMessagesForOneUser = async function(user_id) {
+var getPositiveMessagesForOneUser = async function(body) {
   return new Promise((res, rej) => {
-      db.collection("messages")
-      .where("user_id", "==", user_id)
-      .where("sentiment", "==", "positive")
-      .get()
+      var positiveSentiments = []
+
+      let query = db.collection("messages")
+      for (let q of body.queries) {
+         query.where(q.field, q.operator, q.value)
+      }
+      query.get()
       .then(function(querySnapshot) {
           querySnapshot.forEach(function(doc) {
               console.log(doc.id, " => ", doc.data());
-              res({ success: true, resource: doc.data() });
+              positiveSentiments.push(doc.data())
           });
+          res({ success: true, resource: positiveSentiments });
      })
      .catch(err => {
         res({ success: false })
