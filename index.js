@@ -33,10 +33,14 @@ app.post("/new-message", async (req, res) => {
         console.log("saving on db!");
         let response = await saveUserInfo(req, doc, userRef);
         console.log("response sent!");
-        res.json({ success: true, resource: response.resource });
+        if (response.success)
+          res.json({ success: true, resource: response.resource });
+        else
+          res.json({ success: false })
       })
       .catch(err => {
         console.log("Error getting document", err);
+        res.json({ success: false })
       });
   }
   // if new - GET/getUserProfile?user_id=<PSID>
@@ -105,10 +109,14 @@ var saveUserInfo = async function(req, doc, userRef) {
   return new Promise(async (res, rej) => {
     let response = await analyzeSentiment(message, messagesRef);
     //console.log("update db object: " + response.entities.sentiment[0].value);
-    res({ success: true, resource: response.resource });
+    if (response.success)
+      res({ success: true, resource: response.resource });
+    else
+      res({ success: false })
   })
   .catch(function () {
      console.log("saveUserInfo: Promise Rejected");
+     res({ success: false })
   });
 };
 
@@ -153,7 +161,7 @@ var analyzeSentiment = function(message, messagesRef) {
             });
        });
         }).catch(function(error) {
-            toast(error.message);
+            res({ success: false })
         });
 
       // res.json({ success: true, resource: data });

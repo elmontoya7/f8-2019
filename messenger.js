@@ -117,7 +117,7 @@ function callSendAPI(sender_psid, response) {
     "recipient": {
       "id": sender_psid
     },
-    "message": response
+    "message": 'Response: ' + response
   }
 
   console.log(request_body);
