@@ -204,8 +204,9 @@ var getSentimentSpecificMessagesForAllUsers = async function(body) {
   return new Promise((res, rej) => {
       var messages = []
       let query = db.collection("messages")
-      .where("sentiment", "==", body.sentiment)
-      
+      if (body.sentiment)
+        query.where("sentiment", "==", body.sentiment)
+
       /*for (let q of body.queries) {
           query.where(q.field, q.operator, q.value)
       }*/
