@@ -63,7 +63,7 @@ app.post("/sentiment-messages", async (req, res) => {
       res.json({ success: true, resource: response.resource });
     else
       res.json({ success: false })
-   });
+   }
 });
 
 var saveUserInfo = async function(req, doc, userRef) {
