@@ -90,10 +90,11 @@ app.post("/sentiment-messages", async (req, res) => {
           messages.push(doc.data())
         }
       });
-      res({ success: true, resource: messages });
+      res.json({ success: true, resource: messages });
    })
    .catch(err => {
-      res({ success: false })
+      console.log(err);
+      res.json({ success: false })
    });
 });
 
