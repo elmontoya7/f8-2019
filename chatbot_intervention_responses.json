@@ -1,15 +1,18 @@
 {
   "sentiment": {
     "positive": {
-      "feeling": ["How are you?", "You deserve to be happy."],
-      "action": ["Congratulations!"]
+      "feeling": [
+        "I'm glad you're doing well! 😀",
+        "Sweet!  I hope you have a great day!"
+      ],
+      "action": ["That's great to hear!", "Keep up the positive energy!"]
     },
     "negative": {
       "feeling": [
-        "Tell me what I can do now to help you.",
+        "Do you think talking about what's bothering you would make you feel better?",
         "You are not alone in this. I’m here for you."
       ],
-      "action": ["Do you need an outlet to express yourself?"]
+      "action": ["You are not alone in this. I’m here for you."]
     },
     "neutral": {
       "feeling": [
