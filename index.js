@@ -167,7 +167,7 @@ var analyzeSentiment = function(message, messagesRef) {
                   .get()
                   .then(function(querySnapshot) {
                     querySnapshot.forEach(function(theDoc) {
-                      console.log("++++", theDoc.data())
+                      //console.log("++++", theDoc.data())
                       res({ success: true, resource: theDoc.data() });
                     })
                   });
