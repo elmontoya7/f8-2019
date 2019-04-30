@@ -40,7 +40,7 @@ router.post('/auth/facebook', (req, res) => {
         console.error('Facebook Token error:', accessToken.error.message);
         return res.json({ success: false });
       } else {
-        return res.json({ success: true, data: accessToken })
+        return res.json({ success: true, ...accessToken })
       }
     });
   } catch (e) {
