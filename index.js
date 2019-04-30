@@ -70,7 +70,8 @@ app.post("/sentiment-messages", async (req, res) => {
   // }
 
   let query = db.collection("messages"),
-      sentiment
+      sentiment,
+      messages = []
 
   if (req.body.queries) {
     for (let query of req.body.queries) {
