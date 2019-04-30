@@ -182,7 +182,7 @@ function callSendAPI(sender_psid, response) {
       id: sender_psid
     },
     message: {
-      text: "Response: " + response
+      text: response
     }
   };
 
