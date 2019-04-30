@@ -45,8 +45,13 @@ app.post("/new-message", async (req, res) => {
 });
 
 app.post("/sentiment-messages", async (req, res) => {
-  var user_id = (req.body.queries != null && req.body.queries[0] != null) ? req.body.queries[0].value : null; // the first query if for the user_id
-  console.log("here: ", req.body.queries[1].value)
+  var user_id = null
+  for (let query of req.body.queries) {
+    if (query != null && query.field == "user_id") {
+      user_id = query.value
+    }
+  }
+  //var user_id = (req.body.queries != null && req.body.queries[0] != null && req.body.queries[0].value != nul) ? req.body.queries[0].value : null; // the first query if for the user_id
   if (user_id != null) {
      console.log("getting existing user (", user_id + ")'s positive or negative messages from db")
      let response = await getSentimentSpecificMessagesForOneUser(req.body);
@@ -96,12 +101,6 @@ var saveUserInfo = async function(req, doc, userRef) {
   };
   var messagesRef = db.collection("messages");
   messagesRef.add(message);
-
-  /*var messagesRef = db.collection('messages').doc(user.user_id)
-  messagesRef.set({
-    user_id: user.user_id,
-    messages: db.firestore.FieldValue.arrayUnion(message)
-  }, { merge: true })*/
 
   return new Promise(async (res, rej) => {
     let response = await analyzeSentiment(message, messagesRef);
@@ -188,14 +187,14 @@ var analyzeSentiment = function(message, messagesRef) {
 var getSentimentSpecificMessagesForOneUser = async function(body) {
   return new Promise((res, rej) => {
       var messages = []
-      let q = body.queries
+      let queries = body.queries
 
       db.collection("messages")
-      .where(q[0].field, q[0].operator, q[0].value)
+      .where(queries[0].field, queries[0].operator, queries[0].value)
       .get()
       .then(function(querySnapshot) {
           querySnapshot.forEach(function(doc) {
-            if(doc.data().sentiment == q[1].value) {
+            if(doc.data().sentiment == queries[1].value) {
               console.log(doc.id, " => ", doc.data());
               messages.push(doc.data())
             }
@@ -213,7 +212,7 @@ var getSentimentSpecificMessagesForAllUsers = async function(body) {
       var messages = []
       let query = db.collection("messages")
       for (let q of body.queries) {
-         if(q.field === "sentiment") {
+         if(q.field == "sentiment") {
           query.where(q.field, q.operator, q.value)
          }
       }
