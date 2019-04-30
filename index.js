@@ -46,15 +46,19 @@ app.post("/new-message", async (req, res) => {
 
 app.post("/sentiment-messages", async (req, res) => {
   var user_id = null
+  var sentiment = null
   for (let query of req.body.queries) {
     if (query != null && query.field == "user_id") {
       user_id = query.value
+    }
+    else if (query != null && query.field == "sentiment") {
+      sentiment = query.value
     }
   }
   //var user_id = (req.body.queries != null && req.body.queries[0] != null && req.body.queries[0].value != nul) ? req.body.queries[0].value : null; // the first query if for the user_id
   if (user_id != null) {
      console.log("getting existing user (", user_id + ")'s positive or negative messages from db")
-     let response = await getSentimentSpecificMessagesForOneUser(req.body);
+     let response = await getSentimentSpecificMessagesForOneUser(req.body, sentiment);
      if (response.success)
       res.json({ success: true, resource: response.resource });
      else
@@ -62,7 +66,7 @@ app.post("/sentiment-messages", async (req, res) => {
   }
   else {
     console.log("getting all users positive or negative messages from db")
-    let response = await getSentimentSpecificMessagesForAllUsers(req.body);
+    let response = await getSentimentSpecificMessagesForAllUsers(req.body, sentiment);
     if (response.success)
       res.json({ success: true, resource: response.resource });
     else
@@ -184,7 +188,7 @@ var analyzeSentiment = function(message, messagesRef) {
   });
 };
 
-var getSentimentSpecificMessagesForOneUser = async function(body) {
+var getSentimentSpecificMessagesForOneUser = async function(body, sentiment) {
   return new Promise((res, rej) => {
       var messages = []
       let queries = body.queries
@@ -194,7 +198,7 @@ var getSentimentSpecificMessagesForOneUser = async function(body) {
       .get()
       .then(function(querySnapshot) {
           querySnapshot.forEach(function(doc) {
-            if(doc.data().sentiment == queries[1].value) {
+            if(doc.data().sentiment == sentiment) {
               console.log(doc.id, " => ", doc.data());
               messages.push(doc.data())
             }
@@ -207,17 +211,19 @@ var getSentimentSpecificMessagesForOneUser = async function(body) {
   })
 }
 
-var getSentimentSpecificMessagesForAllUsers = async function(body) {
+var getSentimentSpecificMessagesForAllUsers = async function(body, sentiment) {
   return new Promise((res, rej) => {
       var messages = []
-      let query = db.collection("messages")
-      for (let q of body.queries) {
+      db.collection("messages")
+      .where("sentiment", "==", sentiment)
+      
+      /*for (let q of body.queries) {
          if(q.field == "sentiment") {
           query.where(q.field, q.operator, q.value)
          }
-      }
+      }*/
 
-      query.get()
+      .get()
       .then(function(querySnapshot) {
           querySnapshot.forEach(function(doc) {
               console.log(doc.id, " => ", doc.data());
