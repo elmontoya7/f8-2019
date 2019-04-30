@@ -17,8 +17,40 @@ function getRandomInt(max) {
 
 router.get("/hello", (req, res) => res.send("Hello"));
 
-router.get("/webhook", (req, res) => {
-  let VERIFY_TOKEN = "f82019";
+router.post('/auth/facebook', (req, res) => {
+  try {
+    var fields = ['id', 'first_name', 'last_name', 'name'];
+    var accessTokenUrl = 'https://graph.facebook.com/v2.5/oauth/access_token';
+    var graphApiUrl = 'https://graph.facebook.com/v2.5/me?fields=' + fields.join(',');
+    var params = {
+      code: req.body.code,
+      client_id: req.body.clientId,
+      client_secret: '9831de69e2329275dff014f527efaa04',
+      redirect_uri: req.body.redirectUri
+    };
+
+    console.log(params);
+
+    // Step 1. Exchange authorization code for access token.
+    request.get({ url: accessTokenUrl, qs: params, json: true }, function(err, response, accessToken) {
+      if (err) console.log('facebook login error:', err);
+      console.log(accessToken);
+
+      if (response.statusCode !== 200) {
+        console.error('Facebook Token error:', accessToken.error.message);
+        return res.json({ success: false });
+      } else {
+        return res.json({ success: true, data: accessToken })
+      }
+    });
+  } catch (e) {
+    console.log('facebook expception:', e);
+    res.json({ success: false, message: e });
+  }
+})
+
+router.get('/webhook', (req, res) => {
+  let VERIFY_TOKEN = "f82019"
 
   let mode = req.query["hub.mode"];
   let token = req.query["hub.verify_token"];
