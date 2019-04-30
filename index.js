@@ -76,7 +76,7 @@ var saveUserInfo = async function(req, doc, userRef) {
     // new user, ask for more user profile info
     request.get(
       {
-        url: "https://dda49c3f.ngrok.io/api/getUserProfile",
+        url: "https://656e0bf4.ngrok.io/backend/api/getUserProfile",
         qs: { user_id: req.body.user_id },
         json: true
       },
@@ -216,7 +216,7 @@ var getSentimentSpecificMessagesForAllUsers = async function(body) {
           query.where(q.field, q.operator, q.value)
          }
       }
-      
+
       query.get()
       .then(function(querySnapshot) {
           querySnapshot.forEach(function(doc) {
